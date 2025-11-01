@@ -37,7 +37,7 @@ os.system("rm -rf ./logs/")
 gym.register_envs(ale_py)
 
 # Entorno Breakout versión RAM (observación Box(128,)), discretizado para tabular
-env_name = "Breakout-ram-v5"
+env_name = "ALE/Breakout-v5"
 base_env = gym.make(env_name, frameskip=1, full_action_space=False)
 env = DiscreteHashObsWrapper(base_env, n_buckets=50000)
 
