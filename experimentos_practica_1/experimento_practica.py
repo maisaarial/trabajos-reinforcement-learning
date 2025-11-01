@@ -1,6 +1,6 @@
-# experimento_practica.py
 import os
 import gymnasium as gym
+import ale_py  
 import random
 import time
 import numpy as np
@@ -33,8 +33,11 @@ def train_and_evaluate(algo, n_steps=60000, **kwargs):
 
 os.system("rm -rf ./logs/")
 
+# registra ALE en Gymnasium
+gym.register_envs(ale_py)
+
 # Entorno Breakout versión RAM (observación Box(128,)), discretizado para tabular
-env_name = "ALE/Breakout-ram-v5"
+env_name = "Breakout-ram-v5"
 base_env = gym.make(env_name, frameskip=1, full_action_space=False)
 env = DiscreteHashObsWrapper(base_env, n_buckets=50000)
 
