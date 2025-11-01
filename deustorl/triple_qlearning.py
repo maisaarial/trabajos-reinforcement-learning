@@ -10,7 +10,7 @@ class TripleQLearning:
       - Para el bootstrap (max) usa la acción codiciosa de la tabla elegida y
         evalúa su valor como el promedio de las OTRAS dos tablas (estimator ensemble).
       - La política de actuación se basa en la Q media (Q̄ = (Q1+Q2+Q3)/3), expuesta
-        como self.q_table para mantener compatibilidad con el resto de tu código.
+        como self.q_table para mantener compatibilidad con el resto del código.
     """
     def __init__(self, env):
         n_states = env.observation_space.n
@@ -32,7 +32,7 @@ class TripleQLearning:
 
     def _sync_mean_table_full(self):
         """Recalcula la tabla promedio completa (se usa en __init__)."""
-        for s in range(len(self.q_table)):
+        for s in range(self.q_table.n_states):
             self._sync_mean_table_state(s)
 
     # ---------- Learning ----------

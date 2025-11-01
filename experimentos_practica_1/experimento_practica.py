@@ -1,10 +1,11 @@
 import os
 import gymnasium as gym
-from gymnasium.wrappers import TimeLimit, NoopResetEnv, FireResetEnv
-import ale_py  
+from gymnasium.wrappers import TimeLimit
 import random
 import time
 import numpy as np
+import ale_py
+import datetime
 
 from deustorl.common import *
 from deustorl.sarsa import Sarsa
@@ -41,16 +42,11 @@ gym.register_envs(ale_py)
 env_name = "ALE/Breakout-v5"
 base_env = gym.make(env_name, frameskip=1, full_action_space=False)
 # para solucionar ese error del limit
-base_env = NoopResetEnv(base_env, noop_max=30)
-base_env = FireResetEnv(base_env)
 base_env = TimeLimit(base_env, max_episode_steps=4000) 
-
 env = DiscreteHashObsWrapper(base_env, n_buckets=50000)
 
 
-base_visual_env = gym.make(env_name, render_mode='human', frameskip=1, full_action_space=False)
-base_visual_env = NoopResetEnv(base_visual_env, noop_max=30)
-base_visual_env = FireResetEnv(base_visual_env)
+base_visual_env = gym.make(env_name, render_mode='rgb_array', frameskip=1, full_action_space=False)
 base_visual_env = TimeLimit(base_visual_env, max_episode_steps=4000)  # 👈 límite duro
 visual_env = DiscreteHashObsWrapper(base_visual_env, n_buckets=50000)
 
@@ -61,6 +57,22 @@ random.seed(seed)
 env.reset(seed=seed)
 
 n_steps = 200_000
+
+'''
+HP = dict(
+    learning_rate=1e-3,           # (Explorar: 1e-4, 5e-4, 1e-3)
+    gamma=0.99,                   # (Explorar: 0.95, 0.99)
+    buffer_size=50_000,           # (Explorar: 10k, 50k, 100k)
+    learning_starts=1_000,
+    batch_size=64,                # (Explorar: 32, 64, 128)
+    train_freq=4,
+    target_update_interval=1_000, # (Explorar: 500, 1000, 5000)
+    exploration_fraction=0.2,     # fase de exploración lineal
+    exploration_initial_eps=1.0,
+    exploration_final_eps=0.05,   # (Explorar: 0.01, 0.05, 0.1)
+)
+'''
+start_time = time.time()
 
 algo = TripleQLearning(env)
 print("Testing Triple Q-Learning")
@@ -82,3 +94,4 @@ print("Testing Expected SARSA")
 train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
 evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
 
+print("Ha tardado:----- {:0.4f} secs. -----".format(time.time() - start_time))

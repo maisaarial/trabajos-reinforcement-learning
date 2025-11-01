@@ -77,7 +77,6 @@ def softmax_policy(q_values):
 # Convenience function to measure the time that it takes for a a function func() to execute
 def print_duration(func):
     #print("----- Start measuring time -----")
-    start_time = time.time()
     func()
     print("----- {:0.4f} secs. -----".format(time.time() - start_time))
 
@@ -159,6 +158,7 @@ def evaluate_policy_by_steps(env, q_table, policy, n_steps:int=100, verbose=Fals
     if num_episodes != 0:
         avg_reward = total_reward/num_episodes
         avg_steps = (last_episode_step+1)/num_episodes
+        print("Número de episodios: {num_episodes}")
         print("Average reward per episode: {:.4f}".format(avg_reward))
         print("Average steps per episode: {:.4f}".format(avg_steps))
         return avg_reward, avg_steps
