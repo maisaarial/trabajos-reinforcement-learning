@@ -9,6 +9,7 @@ from deustorl.common import *
 from deustorl.sarsa import Sarsa
 from deustorl.qlearning import QLearning
 from deustorl.expected_sarsa import ExpectedSarsa
+from deustorl.triple_qlearning import TripleQLearning
 
 # --- Wrapper mínimo para discretizar la RAM (128 bytes) a un entero ---
 class DiscreteHashObsWrapper(gym.ObservationWrapper):
@@ -30,7 +31,6 @@ def train_and_evaluate(algo, n_steps=60000, **kwargs):
 
     return evaluate_policy(algo.env, algo.q_table, max_policy, n_episodes=100, verbose=False)
 
-# === MISMO PATRÓN QUE activity_2.8b.py ===
 os.system("rm -rf ./logs/")
 
 # Entorno Breakout versión RAM (observación Box(128,)), discretizado para tabular
@@ -60,5 +60,10 @@ evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=Fal
 
 algo = ExpectedSarsa(env)
 print("Testing Expected SARSA")
+train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
+evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
+
+algo = TripleQLearning(env)
+print("Testing Triple Q-Learning")
 train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
 evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
