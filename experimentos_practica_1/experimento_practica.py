@@ -1,5 +1,6 @@
 import os
 import gymnasium as gym
+from gymnasium.wrappers import TimeLimit, NoopResetEnv, FireResetEnv
 import ale_py  
 import random
 import time
@@ -39,17 +40,32 @@ gym.register_envs(ale_py)
 # Entorno Breakout versión RAM (observación Box(128,)), discretizado para tabular
 env_name = "ALE/Breakout-v5"
 base_env = gym.make(env_name, frameskip=1, full_action_space=False)
+# para solucionar ese error del limit
+base_env = NoopResetEnv(base_env, noop_max=30)
+base_env = FireResetEnv(base_env)
+base_env = TimeLimit(base_env, max_episode_steps=4000) 
+
 env = DiscreteHashObsWrapper(base_env, n_buckets=50000)
 
-# Visualización (mismo patrón: env con render_mode='human')
+
 base_visual_env = gym.make(env_name, render_mode='human', frameskip=1, full_action_space=False)
+base_visual_env = NoopResetEnv(base_visual_env, noop_max=30)
+base_visual_env = FireResetEnv(base_visual_env)
+base_visual_env = TimeLimit(base_visual_env, max_episode_steps=4000)  # 👈 límite duro
 visual_env = DiscreteHashObsWrapper(base_visual_env, n_buckets=50000)
+
+# Visualización (mismo patrón: env con render_mode='human')
 
 seed = 3
 random.seed(seed)
 env.reset(seed=seed)
 
 n_steps = 200_000
+
+algo = TripleQLearning(env)
+print("Testing Triple Q-Learning")
+train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
+evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
 
 algo = Sarsa(env)
 print("Testing SARSA")
@@ -66,7 +82,3 @@ print("Testing Expected SARSA")
 train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
 evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
 
-algo = TripleQLearning(env)
-print("Testing Triple Q-Learning")
-train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
-evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
