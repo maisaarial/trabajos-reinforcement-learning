@@ -36,17 +36,19 @@ class TripleQLearning:
             self._sync_mean_table_state(s)
 
     # ---------- Learning ----------
-    def learn(self, policy, n_steps: int = 100, discount_rate=1.0, lr=0.01, lrdecay=1.0,
+    def learn(self, policy, n_steps: int = 100, discount_rate=1.0, lr=0.1, lrdecay=1.0,
               n_episodes_decay=100, tb_episode_period=100, verbose=False):
         
         obs, _ = self.env.reset()
         selected_action = policy(self.q_table[obs])
+        current_epsilon=policy.epsilon
 
         tblogger = TensorboardLogger(
             "TripleQLearning_(dr=" + str(discount_rate)
             + "-lr=" + str(lr)
             + "-lrdecay=" + str(lrdecay)
-            + "e" + str(n_episodes_decay) + ")",
+            + "e" + str(n_episodes_decay) 
+            + "-eps=" + str(current_epsilon) + ")",
             episode_period=tb_episode_period
         )
 
@@ -54,6 +56,7 @@ class TripleQLearning:
         episode_reward = 0.0
         episode_steps = 0
 
+        print("Ha entrado en learn")
         for _ in range(n_steps):
             prev_obs = obs
             prev_action = selected_action

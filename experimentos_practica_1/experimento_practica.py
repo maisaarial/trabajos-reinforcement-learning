@@ -25,8 +25,12 @@ class DiscreteHashObsWrapper(gym.ObservationWrapper):
         h = hashlib.sha1(np.asarray(obs, dtype=np.uint8).tobytes()).hexdigest()
         return int(h[:12], 16) % self.n_buckets
 
-def train_and_evaluate(algo, n_steps=60000, **kwargs):
-    epsilon_greedy_policy = EpsilonGreedyPolicy(epsilon=0.1)
+def train_and_evaluate(algo, n_steps, **kwargs):
+    epsilon_greedy_policy = EpsilonGreedyPolicy(
+        exploration_fraction=0.2,     # fase de exploración lineal
+        exploration_initial_eps=1.0,
+        exploration_final_eps=0.05,  #Explorar: 0.01, 0.05, 0.1
+        total_timesteps=n_steps)
     start_time = time.time()
     algo.learn(epsilon_greedy_policy, n_steps, **kwargs)
     print("----- {:0.4f} secs. -----".format(time.time() - start_time))
@@ -56,42 +60,48 @@ seed = 3
 random.seed(seed)
 env.reset(seed=seed)
 
-n_steps = 200_000
+n_steps = 100_000
+
 
 '''
-HP = dict(
+kwargs = dict(
     learning_rate=1e-3,           # (Explorar: 1e-4, 5e-4, 1e-3)
-    gamma=0.99,                   # (Explorar: 0.95, 0.99)
-    buffer_size=50_000,           # (Explorar: 10k, 50k, 100k)
+    gamma=0.99, 
+    discount_rate=1.0,                  # (Explorar: 0.95, 0.99)
     learning_starts=1_000,
-    batch_size=64,                # (Explorar: 32, 64, 128)
-    train_freq=4,
-    target_update_interval=1_000, # (Explorar: 500, 1000, 5000)
-    exploration_fraction=0.2,     # fase de exploración lineal
-    exploration_initial_eps=1.0,
-    exploration_final_eps=0.05,   # (Explorar: 0.01, 0.05, 0.1)
+    lr=0.01,
+    lrdecay=1.0,
+    n_episodes_decay=100,
+    tb_episode_period=100,   
 )
 '''
+
 start_time = time.time()
+
+epsilon_greedy_policy = EpsilonGreedyPolicy(
+        exploration_fraction=0.2,     # fase de exploración lineal
+        exploration_initial_eps=1.0,
+        exploration_final_eps=0.05,  #Explorar: 0.01, 0.05, 0.1
+        total_timesteps=n_steps)
 
 algo = TripleQLearning(env)
 print("Testing Triple Q-Learning")
 train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
-evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
+evaluate_policy(visual_env, algo.q_table, epsilon_greedy_policy, n_episodes=10, verbose=False)
 
 algo = Sarsa(env)
 print("Testing SARSA")
 train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
-evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
+evaluate_policy(visual_env, algo.q_table, epsilon_greedy_policy, n_episodes=10, verbose=False)
 
 algo = QLearning(env)
 print("Testing Q-Learning")
 train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
-evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
+evaluate_policy(visual_env, algo.q_table, epsilon_greedy_policy, n_episodes=10, verbose=False)
 
 algo = ExpectedSarsa(env)
 print("Testing Expected SARSA")
 train_and_evaluate(algo, n_steps=n_steps, lr=0.1)
-evaluate_policy(visual_env, algo.q_table, max_policy, n_episodes=10, verbose=False)
+evaluate_policy(visual_env, algo.q_table, epsilon_greedy_policy, n_episodes=10, verbose=False)
 
 print("Ha tardado:----- {:0.4f} secs. -----".format(time.time() - start_time))

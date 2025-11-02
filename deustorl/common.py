@@ -54,10 +54,23 @@ def max_policy(q_values):
     return action
 
 class EpsilonGreedyPolicy():
-    def __init__(self, epsilon=0.1):
-        self.epsilon = epsilon
+    def __init__(self, exploration_fraction=0.2, exploration_initial_eps=1.0, exploration_final_eps=0.05, total_timesteps=100_000):
+        self.exploration_fraction=exploration_fraction
+        self.initial_eps=exploration_initial_eps
+        self.final_eps=exploration_final_eps        
+        self.total_steps=total_timesteps
+        self.epsilon = exploration_initial_eps
+        self.current_step=0
+
+    def _update_epsilon(self):
+        progress = self.current_step/(self.total_steps *self.exploration_fraction)
+        progress=min(progress,1.0)
+        self.epsilon=self.initial_eps-progress*(self.final_eps-self.initial_eps)
 
     def __call__(self, q_values):
+        self._update_epsilon()
+        self.current_step+=1
+
         if random.random() < self.epsilon:
             return random.randint(0,len(q_values)-1)
         else:
@@ -77,6 +90,7 @@ def softmax_policy(q_values):
 # Convenience function to measure the time that it takes for a a function func() to execute
 def print_duration(func):
     #print("----- Start measuring time -----")
+    start_time = time.time()
     func()
     print("----- {:0.4f} secs. -----".format(time.time() - start_time))
 
@@ -87,6 +101,8 @@ def evaluate_policy(env, q_table, policy, n_episodes:int=100, max_total_steps = 
     """
     total_steps = 0
     total_reward = 0
+    all_standard_rewards=[]
+    episode_rewards_list = []
 
     for n in range(n_episodes):
         episode_reward = 0
@@ -102,10 +118,20 @@ def evaluate_policy(env, q_table, policy, n_episodes:int=100, max_total_steps = 
             done = terminated or truncated
             episode_reward += reward
 
+            #episode_rewards_list.append(reward)
+
             total_steps += 1
 
             if verbose:
                 print(env.render())
+            #Calcular standard reward del episodio 
+            '''
+            rewards_array=np.array(episode_rewards_list)
+            mean_r=np.mean(rewards_array)
+            std_r=np.std(rewards_array)+1e-8
+            standard_rewards=(rewards_array-mean_r)/std_r
+            all_standard_rewards.append(standard_rewards)
+            '''
 
         total_reward += episode_reward
         if total_steps >= max_total_steps: # in the case the episode is infinite
@@ -117,7 +143,9 @@ def evaluate_policy(env, q_table, policy, n_episodes:int=100, max_total_steps = 
     else:
         avg_reward = total_reward/n_episodes
         avg_steps = total_steps/n_episodes
+        #avg_std_r = np.mean([np.mean(ep_std) for ep_std in all_standard_rewards])
         print("Average reward per episode: {:.4f}".format(avg_reward))
+        #print("Average standard reward per episode: {:.4f}".format(avg_std_r))
         print("Average steps per episode: {:.4f}".format(avg_steps))
         return avg_reward, avg_steps
 
@@ -142,10 +170,11 @@ def evaluate_policy_by_steps(env, q_table, policy, n_steps:int=100, verbose=Fals
 
         selected_action = policy(q_table[obs])
 
-        if terminated or truncated:
-            # reset the environment and reinitialize trajectory
+        if terminated or truncated:            
+            # Reset the environment and reinitialize trajectory
             if verbose:
                 print("--- EPISODE STARTS ---")
+            #Reiniciar para siguiente episodio
             obs,_ = env.reset()
             selected_action = policy(q_table[obs])
             if verbose:
