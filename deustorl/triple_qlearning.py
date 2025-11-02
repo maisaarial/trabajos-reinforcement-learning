@@ -19,7 +19,7 @@ class TripleQLearning:
         self.q1 = QTable(n_states, n_actions)
         self.q2 = QTable(n_states, n_actions)
         self.q3 = QTable(n_states, n_actions)
-        # Vista promedio (para actuar con la policy y para inspección)
+        # Vista promedio 
         self.q_table = QTable(n_states, n_actions)
         self._sync_mean_table_full()
         self.env = env
